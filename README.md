@@ -1,2 +1,1 @@
-# siego
-Siego : Static Indexing Engine written in GOlang 
+# Siego : Static Indexing Engine written in GOlang 
