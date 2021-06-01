@@ -1,7 +1,10 @@
-package util
+package utils
 
 import (
+	"fmt"
+	"os"
 	"path"
+	"regexp"
 	"unicode/utf8"
 )
 
@@ -56,4 +59,42 @@ func IsTextFile(filename string) bool {
 	}
 
 	return IsText(buf[0:n])*/
+}
+
+func CreateFile(filePath string) *os.File {
+	file, err := os.Create(filePath)
+	if err != nil {
+		fmt.Println("Error : Cannot create file ", filePath, err)
+		os.Exit(1)
+	}
+	return file
+}
+
+func RemoveNonWordCharacters(str string) string {
+	re, _ := regexp.Compile(`[^A-Za-z]`)
+	return string(re.ReplaceAll([]byte(str), []byte(" ")))
+}
+
+func BrowseDir(dirPath string) []string {
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		fmt.Println("Error while opening directory :", err)
+		os.Exit(1)
+	}
+	defer dir.Close()
+	entries, err := dir.ReadDir(-1)
+	if err != nil {
+		fmt.Println("Error while opening directory :", err)
+		os.Exit(1)
+	}
+	result := []string{}
+	for _, entry := range entries {
+		entryPath := path.Join(dirPath, entry.Name())
+		if entry.IsDir() {
+			result = append(result, BrowseDir(entryPath)...)
+		} else {
+			result = append(result, entryPath)
+		}
+	}
+	return result
 }
