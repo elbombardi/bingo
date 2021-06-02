@@ -66,7 +66,11 @@ func main() {
 		}
 		siegoIndex.Index()
 		if outputPath != "" {
-			siegoIndex.Save(outputPath)
+			err := siegoIndex.Save(outputPath)
+			if err != nil {
+				fmt.Println("Error : Cannot save index ", err)
+				os.Exit(1)
+			}
 		}
 	} else if indexPath != "" {
 		siegoIndex, err = index.Load(indexPath)
@@ -75,7 +79,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	siegoIndex.PrintEntries()
+	// siegoIndex.PrintEntries()
 
 	inputScanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")

@@ -10,10 +10,10 @@ import (
 	"github.com/elbombardi/siego/utils"
 )
 
-const (
-	MIN_LENGTH_ELIGIBLE_WORD = 3
-	FREQUENCY_THRESHOLD      = 0.9
-)
+// const (
+// 	MIN_LENGTH_ELIGIBLE_WORD = 3
+// 	FREQUENCY_THRESHOLD      = 0.9
+// )
 
 type Document struct {
 	Id         int    `json:"id"`
@@ -27,11 +27,11 @@ type Location struct {
 }
 
 type IndexEntry struct {
-	Id        string
 	Name      rune                `json:"n"`
 	Locations map[int]Location    `json:"l"`
 	Children  map[rune]IndexEntry `json:"c"`
-	Parent    *IndexEntry
+	Fullname  string              `json:"fn"`
+	Parent    *IndexEntry         `json:"-"`
 }
 
 type SiegoIndex struct {
@@ -65,6 +65,7 @@ func (ind *SiegoIndex) Index() {
 	fmt.Println("Data path : ", ind.Target)
 	ind.stepGenerateDocumentsMap()
 	ind.stepGenerateEntries()
+	ind.Lookup("dieu")
 	ind.stepPurgeMostFrequent()
 	fmt.Printf("Done!\n %d document(s) parsed, %d word(s) parsed, %d word(s) indexed\n",
 		len(ind.DocumentsMap), ind.TotalWordCount, ind.CountEntries())
@@ -75,7 +76,7 @@ func (ind *SiegoIndex) Lookup(query string) (locations map[int]Location, found b
 	if query == "" {
 		return nil, false
 	}
-	query = strings.ToUpper(query)
+	query = utils.Normalise(query)
 	query = strings.Fields(query)[0] //for this first version, we only look for the first word
 	entry := ind.Root.lookupWord([]rune(query))
 	if entry != nil {
@@ -126,7 +127,7 @@ func (ind *SiegoIndex) stepGenerateEntries() {
 }
 
 func (ind *SiegoIndex) stepPurgeMostFrequent() {
-	ind.Root.purgeFrequentEntries(len(ind.DocumentsMap), FREQUENCY_THRESHOLD)
+	// ind.Root.purgeFrequentEntries(len(ind.DocumentsMap), FREQUENCY_THRESHOLD)
 }
 
 func (ind *SiegoIndex) parseDocument(document Document, documentId int) (wordsCount int) {
@@ -141,9 +142,9 @@ func (ind *SiegoIndex) parseDocument(document Document, documentId int) (wordsCo
 	wordsCount = 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		line = utils.RemoveNonWordCharacters(line)
-		for _, word := range strings.Fields(line) {
+		for _, word := range strings.FieldsFunc(line, utils.IsNotLetter) {
 			wordsCount++
+			word = utils.Normalise(word)
 			ind.indexWord(word, documentId, wordsCount)
 		}
 	}
@@ -152,11 +153,10 @@ func (ind *SiegoIndex) parseDocument(document Document, documentId int) (wordsCo
 
 func (ind *SiegoIndex) indexWord(word string, documentId, position int) {
 	word = strings.TrimSpace(word)
-	if len(word) < MIN_LENGTH_ELIGIBLE_WORD {
-		return
-	}
+	// if len(word) < MIN_LENGTH_ELIGIBLE_WORD {
+	// 	return
+	// }
 	word = strings.ToUpper(word)
-
 	ind.Root.indexWord([]rune(word), documentId, position)
 }
 
@@ -189,8 +189,7 @@ func (entry *IndexEntry) indexWord(word []rune, documentId, position int) {
 	child, exist := entry.Children[header]
 	if !exist {
 		child = IndexEntry{
-			Name:   header,
-			Parent: entry,
+			Name: header,
 		}
 	}
 	if len(word) == 1 {
@@ -226,6 +225,7 @@ func (entry *IndexEntry) lookupWord(query []rune) *IndexEntry {
 		if child.Locations == nil {
 			return nil
 		} else {
+			fmt.Println("Found ==> " + child.Fullname)
 			fmt.Println("Found ==> " + child.fullName())
 			return &child
 		}
@@ -245,12 +245,12 @@ func (entry *IndexEntry) countEntries() (count int) {
 }
 
 func (entry *IndexEntry) propagateParent() {
-	// for key, child := range entry.Children {
-	// 	child.Parent = entry
-	// 	fmt.Println("Parent : ", string(child.Parent.Name), "Child : ", string(child.Name))
-	// 	child.propagateParent()
-	// 	entry.Children[key] = child
-	// }
+	for key, child := range entry.Children {
+		child.Fullname = entry.Fullname + string(child.Name)
+		child.Parent = entry
+		child.propagateParent()
+		entry.Children[key] = child
+	}
 }
 
 func (entry *IndexEntry) fullName() string {
@@ -260,19 +260,18 @@ func (entry *IndexEntry) fullName() string {
 	return entry.Parent.fullName() + string(entry.Name)
 }
 
-func (entry *IndexEntry) purgeFrequentEntries(totalDocNumber int, frequencyThreshold float32) (purged bool) {
-	// frequency := float32(len(entry.Locations)) / float32(totalDocNumber)
-	// purged = (frequency > frequencyThreshold)
-	// for key, child := range entry.Children {
-	// 	childPurged := child.purgeFrequentEntries(totalDocNumber, frequencyThreshold)
-	// 	if childPurged {
-	// 		delete(entry.Children, key)
-	// 	}
-	// }
-	// purged2 := purged && (len(entry.Children) == 0)
-	// if purged && !purged2 {
-	// 	fmt.Printf("Purged word '%s' (%s) (frequency %0.0f)\n", entry.fullName(), string(entry.Name), frequency*100)
-	// }
-	// return purged2
-	return false
-}
+// func (entry *IndexEntry) purgeFrequentEntries(totalDocNumber int, frequencyThreshold float32) (purged bool) {
+// 	frequency := float32(len(entry.Locations)) / float32(totalDocNumber)
+// 	purged = (frequency > frequencyThreshold)
+// 	for key, child := range entry.Children {
+// 		childPurged := child.purgeFrequentEntries(totalDocNumber, frequencyThreshold)
+// 		if childPurged {
+// 			delete(entry.Children, key)
+// 		}
+// 	}
+// 	purged2 := purged && (len(entry.Children) == 0)
+// 	if purged && !purged2 {
+// 		fmt.Printf("Purged word '%s' (%s) (frequency %0.0f)\n", entry.fullName(), string(entry.Name), frequency*100)
+// 	}
+// 	return purged2
+// }

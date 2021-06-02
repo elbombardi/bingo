@@ -11,7 +11,7 @@
             "mode": "auto",
             "program": "${fileDirname}", 
             "args": [
-                "-data=datasets/"
+                "-data=datasets/",
             ]
         }
     ]
