@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"regexp"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -32,6 +32,8 @@ func IsText(s []byte) bool {
 var textExt = map[string]bool{
 	".md":  true, // must be served raw
 	".txt": true, // must be served raw
+	".csv": true, // must be served raw
+
 }
 
 // IsTextFile reports whether the file has a known extension indicating
@@ -70,9 +72,15 @@ func CreateFile(filePath string) *os.File {
 	return file
 }
 
-func RemoveNonWordCharacters(str string) string {
-	re, _ := regexp.Compile(`[^A-Za-z]`)
-	return string(re.ReplaceAll([]byte(str), []byte(" ")))
+func RemoveNonWordCharacters(str string) (newStr string) {
+	for _, r := range str {
+		if unicode.IsLetter(r) {
+			newStr += string(r)
+		} else {
+			newStr += " "
+		}
+	}
+	return newStr
 }
 
 func BrowseDir(dirPath string) []string {

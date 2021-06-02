@@ -10,22 +10,51 @@ import (
 	"github.com/elbombardi/siego/utils"
 )
 
-// TODO add exact position in text
+const (
+	MIN_LENGTH_ELIGIBLE_WORD = 3
+	FREQUENCY_THRESHOLD      = 0.9
+)
+
+type Document struct {
+	Id         int    `json:"id"`
+	Name       string `json:"name"`
+	WordsCount int    `json:"words_count"`
+}
+
 type Location struct {
-	Key     int `json:"key"`
-	Counter int `json:"counter"`
+	DocId     int   `json:"k"`
+	Positions []int `json:"p"`
 }
 
 type IndexEntry struct {
-	Name      rune                `json:"name"`
-	Locations map[int]Location    `json:"locations"`
-	Children  map[rune]IndexEntry `json:"children"`
+	Id        string
+	Name      rune                `json:"n"`
+	Locations map[int]Location    `json:"l"`
+	Children  map[rune]IndexEntry `json:"c"`
+	Parent    *IndexEntry
 }
 
 type SiegoIndex struct {
-	LocationsMap []string            `json:"locations_map"`
-	Target       string              `json:"target"`
-	Entries      map[rune]IndexEntry `json:"entries"`
+	DocumentsMap   []Document `json:"documents_map"`
+	TotalWordCount int        `json:"total_word_count"`
+	Target         string     `json:"target"`
+	Root           IndexEntry `json:"root"`
+}
+
+func Load(filename string) (*SiegoIndex, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	index := &SiegoIndex{}
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(index)
+	if err != nil {
+		return nil, err
+	}
+	index.Root.propagateParent()
+	return index, nil
 }
 
 func (ind *SiegoIndex) Index() {
@@ -34,20 +63,25 @@ func (ind *SiegoIndex) Index() {
 		os.Exit(1)
 	}
 	fmt.Println("Data path : ", ind.Target)
-	ind.stepGenerateMap()
+	ind.stepGenerateDocumentsMap()
 	ind.stepGenerateEntries()
-	fmt.Println("Done!")
+	ind.stepPurgeMostFrequent()
+	fmt.Printf("Done!\n %d document(s) parsed, %d word(s) parsed, %d word(s) indexed\n",
+		len(ind.DocumentsMap), ind.TotalWordCount, ind.CountEntries())
 }
 
-func (ind *SiegoIndex) Lookup(query string) []Location {
+func (ind *SiegoIndex) Lookup(query string) (locations map[int]Location, found bool) {
 	query = strings.TrimSpace(query)
 	if query == "" {
-		return nil
+		return nil, false
 	}
 	query = strings.ToUpper(query)
 	query = strings.Fields(query)[0] //for this first version, we only look for the first word
-
-	return lookupWordInEntries(ind.Entries, []rune(query))
+	entry := ind.Root.lookupWord([]rune(query))
+	if entry != nil {
+		return entry.Locations, true
+	}
+	return nil, false
 }
 
 func (ind *SiegoIndex) Save(filename string) error {
@@ -64,143 +98,181 @@ func (ind *SiegoIndex) Save(filename string) error {
 	return nil
 }
 
-func Load(filename string) (*SiegoIndex, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	index := &SiegoIndex{}
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(index)
-	if err != nil {
-		return nil, err
-	}
-	return index, nil
-}
-
-func (ind *SiegoIndex) indexWord(word string, locationKey int) {
-	word = strings.TrimSpace(word)
-	if word == "" {
-		return
-	}
-	word = strings.ToUpper(word)
-	if ind.Entries == nil {
-		ind.Entries = make(map[rune]IndexEntry)
-	}
-	addWordToEntries(ind.Entries, []rune(word), locationKey)
-}
-
-func (ind *SiegoIndex) stepGenerateMap() {
-	ind.LocationsMap = []string{}
+func (ind *SiegoIndex) stepGenerateDocumentsMap() {
+	ind.DocumentsMap = []Document{}
+	docCounter := 0
 	for _, filePath := range utils.BrowseDir(ind.Target) {
 		if utils.IsTextFile(filePath) {
-			ind.LocationsMap = append(ind.LocationsMap, filePath)
-		}
-	}
-}
-
-func (ind *SiegoIndex) generateEntries(location string, locationKey int) {
-	file, err := os.Open(location)
-	if err != nil {
-		fmt.Println("Error while reading file.", err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		line := scanner.Text()
-		line = utils.RemoveNonWordCharacters(line)
-		for _, word := range strings.Fields(line) {
-			ind.indexWord(word, locationKey)
+			document := Document{
+				Id:   docCounter,
+				Name: filePath,
+			}
+			ind.DocumentsMap = append(ind.DocumentsMap, document)
+			docCounter++
 		}
 	}
 }
 
 func (ind *SiegoIndex) stepGenerateEntries() {
-	for i, filename := range ind.LocationsMap {
-		fmt.Printf("Indexing '%s'...\n", filename)
-		ind.generateEntries(filename, i)
+	totalDocNumber := len(ind.DocumentsMap)
+	for i, doc := range ind.DocumentsMap {
+		fmt.Printf("[%3.0f %%] Indexing '%s'...\n",
+			(float32(i)/float32(totalDocNumber))*100, doc.Name)
+		doc.WordsCount = ind.parseDocument(doc, i)
+		ind.DocumentsMap[i] = doc
+		ind.TotalWordCount += doc.WordsCount
 	}
+	ind.Root.propagateParent()
+}
+
+func (ind *SiegoIndex) stepPurgeMostFrequent() {
+	ind.Root.purgeFrequentEntries(len(ind.DocumentsMap), FREQUENCY_THRESHOLD)
+}
+
+func (ind *SiegoIndex) parseDocument(document Document, documentId int) (wordsCount int) {
+	file, err := os.Open(document.Name)
+	if err != nil {
+		fmt.Println("Error while reading file.", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	wordsCount = 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = utils.RemoveNonWordCharacters(line)
+		for _, word := range strings.Fields(line) {
+			wordsCount++
+			ind.indexWord(word, documentId, wordsCount)
+		}
+	}
+	return wordsCount
+}
+
+func (ind *SiegoIndex) indexWord(word string, documentId, position int) {
+	word = strings.TrimSpace(word)
+	if len(word) < MIN_LENGTH_ELIGIBLE_WORD {
+		return
+	}
+	word = strings.ToUpper(word)
+
+	ind.Root.indexWord([]rune(word), documentId, position)
+}
+
+func (ind *SiegoIndex) CountEntries() (count int) {
+	return ind.Root.countEntries()
 }
 
 func (ind *SiegoIndex) PrintEntries() {
-	printEntries(" ", ind.Entries)
+	ind.Root.printEntries("")
 }
 
-func printEntries(indent string, entries map[rune]IndexEntry) {
-	for k, v := range entries {
-		fmt.Printf("%s%s%s\n", indent, "Name => ", string(k))
-		if len(v.Locations) != 0 {
-			fmt.Printf("%s%s%v\n", indent, "Locations => ", v.Locations)
+func (entry *IndexEntry) printEntries(indent string) {
+	for k, child := range entry.Children {
+		fmt.Printf("%s%s%s (parent : %s)\n", indent, "Name => ", string(k), string(child.Parent.Name))
+		if len(child.Locations) != 0 {
+			fmt.Printf("%s%s%v\n", indent, "Locations => ", child.Locations)
 		}
-		if v.Children != nil {
-			printEntries(indent+"\t", v.Children)
-		}
+		child.printEntries(indent + "\t")
 	}
 }
 
-func addWordToEntries(entries map[rune]IndexEntry, word []rune, locKey int) {
+func (entry *IndexEntry) indexWord(word []rune, documentId, position int) {
 	if len(word) == 0 {
 		return
 	}
 	header := word[0]
-	entry, exist := entries[header]
+	if entry.Children == nil {
+		entry.Children = make(map[rune]IndexEntry)
+	}
+	child, exist := entry.Children[header]
 	if !exist {
-		entry = IndexEntry{
-			Name: header,
+		child = IndexEntry{
+			Name:   header,
+			Parent: entry,
 		}
 	}
 	if len(word) == 1 {
-		if entry.Locations == nil {
-			entry.Locations = make(map[int]Location)
+		if child.Locations == nil {
+			child.Locations = make(map[int]Location)
 		}
-		loc, exists := entry.Locations[locKey]
+		loc, exists := child.Locations[documentId]
 		if !exists {
-			entry.Locations[locKey] = Location{locKey, 1}
+			child.Locations[documentId] = Location{documentId, []int{position}}
 		} else {
-			loc.Counter++
-			entry.Locations[locKey] = loc
+			loc.Positions = append(loc.Positions, position)
+			child.Locations[documentId] = loc
 		}
 	} else {
-		if entry.Children == nil {
-			entry.Children = make(map[rune]IndexEntry)
-		}
-		addWordToEntries(entry.Children, word[1:], locKey)
+		child.indexWord(word[1:], documentId, position)
 	}
-	entries[header] = entry
+	entry.Children[header] = child
 }
 
-func lookupWordInEntries(entries map[rune]IndexEntry, query []rune) []Location {
+func (entry *IndexEntry) lookupWord(query []rune) *IndexEntry {
 	if len(query) == 0 {
 		return nil
 	}
+	if len(entry.Children) == 0 {
+		return nil
+	}
 	header := query[0]
-	entry, exists := entries[header]
+	child, exists := entry.Children[header]
 	if !exists {
 		return nil
 	}
 	if len(query) == 1 {
-		if entry.Locations == nil {
+		if child.Locations == nil {
 			return nil
 		} else {
-			return valuesFromLocationMap(entry.Locations)
+			fmt.Println("Found ==> " + child.fullName())
+			return &child
 		}
 	} else {
-		if entry.Children == nil {
-			return nil
-		} else {
-			return lookupWordInEntries(entry.Children, query[1:])
-		}
+		return child.lookupWord(query[1:])
 	}
 }
 
-func valuesFromLocationMap(locations map[int]Location) []Location {
-	result := []Location{}
-	for _, location := range locations {
-		result = append(result, location)
+func (entry *IndexEntry) countEntries() (count int) {
+	if len(entry.Locations) != 0 {
+		count = 1
 	}
-	return result
+	for _, child := range entry.Children {
+		count += child.countEntries()
+	}
+	return count
+}
+
+func (entry *IndexEntry) propagateParent() {
+	// for key, child := range entry.Children {
+	// 	child.Parent = entry
+	// 	fmt.Println("Parent : ", string(child.Parent.Name), "Child : ", string(child.Name))
+	// 	child.propagateParent()
+	// 	entry.Children[key] = child
+	// }
+}
+
+func (entry *IndexEntry) fullName() string {
+	if entry.Parent == nil {
+		return string(entry.Name)
+	}
+	return entry.Parent.fullName() + string(entry.Name)
+}
+
+func (entry *IndexEntry) purgeFrequentEntries(totalDocNumber int, frequencyThreshold float32) (purged bool) {
+	// frequency := float32(len(entry.Locations)) / float32(totalDocNumber)
+	// purged = (frequency > frequencyThreshold)
+	// for key, child := range entry.Children {
+	// 	childPurged := child.purgeFrequentEntries(totalDocNumber, frequencyThreshold)
+	// 	if childPurged {
+	// 		delete(entry.Children, key)
+	// 	}
+	// }
+	// purged2 := purged && (len(entry.Children) == 0)
+	// if purged && !purged2 {
+	// 	fmt.Printf("Purged word '%s' (%s) (frequency %0.0f)\n", entry.fullName(), string(entry.Name), frequency*100)
+	// }
+	// return purged2
+	return false
 }
