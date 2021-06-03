@@ -65,7 +65,6 @@ func (ind *SiegoIndex) Index() {
 	fmt.Println("Data path : ", ind.Target)
 	ind.stepGenerateDocumentsMap()
 	ind.stepGenerateEntries()
-	ind.Lookup("dieu")
 	ind.stepPurgeMostFrequent()
 	fmt.Printf("Done!\n %d document(s) parsed, %d word(s) parsed, %d word(s) indexed\n",
 		len(ind.DocumentsMap), ind.TotalWordCount, ind.CountEntries())
@@ -225,8 +224,6 @@ func (entry *IndexEntry) lookupWord(query []rune) *IndexEntry {
 		if child.Locations == nil {
 			return nil
 		} else {
-			fmt.Println("Found ==> " + child.Fullname)
-			fmt.Println("Found ==> " + child.fullName())
 			return &child
 		}
 	} else {
@@ -245,7 +242,8 @@ func (entry *IndexEntry) countEntries() (count int) {
 }
 
 func (entry *IndexEntry) propagateParent() {
-	for key, child := range entry.Children {
+	for key := range entry.Children {
+		child := entry.Children[key]
 		child.Fullname = entry.Fullname + string(child.Name)
 		child.Parent = entry
 		child.propagateParent()
