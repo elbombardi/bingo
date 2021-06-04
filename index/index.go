@@ -10,27 +10,46 @@ import (
 	"github.com/elbombardi/siego/utils"
 )
 
-// const (
-// 	MIN_LENGTH_ELIGIBLE_WORD = 3
-// 	FREQUENCY_THRESHOLD      = 0.9
-// )
+type HitField struct {
+	Name               string
+	Line               int
+	PositionInDocument int
+}
+
+type Hit struct {
+	DocId   int
+	Fields  []HitField
+	MinLine int
+	MaxLine int
+	MinPID  int
+	MaxPID  int
+}
+
+type DocumentLanguage struct {
+	Code string `json:"language"`
+}
 
 type Document struct {
-	Id         int    `json:"id"`
-	Name       string `json:"name"`
-	WordsCount int    `json:"words_count"`
+	Id         int                `json:"id"`
+	Name       string             `json:"name"`
+	WordsCount int                `json:"words_count"`
+	Languages  []DocumentLanguage `json:"languages"`
+}
+
+type Position struct {
+	PositionInDoc int `json:"p"`
+	LineNumber    int `json:"l"`
 }
 
 type Location struct {
-	DocId     int   `json:"k"`
-	Positions []int `json:"p"`
+	DocId     int        `json:"k"`
+	Positions []Position `json:"p"`
 }
 
 type IndexEntry struct {
 	Name      rune                `json:"n"`
 	Locations map[int]Location    `json:"l"`
 	Children  map[rune]IndexEntry `json:"c"`
-	Fullname  string              `json:"fn"`
 	Parent    *IndexEntry         `json:"-"`
 }
 
@@ -70,17 +89,26 @@ func (ind *SiegoIndex) Index() {
 		len(ind.DocumentsMap), ind.TotalWordCount, ind.CountEntries())
 }
 
-func (ind *SiegoIndex) Lookup(query string) (locations map[int]Location, found bool) {
+func (ind *SiegoIndex) Lookup(query string) (hits []Hit, found bool) {
 	query = strings.TrimSpace(query)
 	if query == "" {
 		return nil, false
 	}
 	query = utils.Normalise(query)
-	query = strings.Fields(query)[0] //for this first version, we only look for the first word
-	entry := ind.Root.lookupWord([]rune(query))
-	if entry != nil {
-		return entry.Locations, true
+	queryFields := strings.Fields(query)
+	entries := make(map[string]*IndexEntry)
+	for _, queryField := range queryFields {
+		entry := ind.Root.lookupWord([]rune(queryField))
+		if entry == nil {
+			//all fields are required,
+			return nil, false
+		}
+		entries[queryField] = entry
 	}
+	//we look for them the words in the same order within a limited range (3 words)
+	// for _, queryField := range queryFields {
+	// 	entries[queryField].Locations[]
+	// }
 	return nil, false
 }
 
@@ -139,24 +167,26 @@ func (ind *SiegoIndex) parseDocument(document Document, documentId int) (wordsCo
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 	wordsCount = 0
+	linesCount := 1
 	for scanner.Scan() {
 		line := scanner.Text()
+		line = utils.Normalise(line)
 		for _, word := range strings.FieldsFunc(line, utils.IsNotLetter) {
 			wordsCount++
-			word = utils.Normalise(word)
-			ind.indexWord(word, documentId, wordsCount)
+			ind.indexWord(word, documentId, wordsCount, linesCount)
 		}
+		linesCount++
 	}
 	return wordsCount
 }
 
-func (ind *SiegoIndex) indexWord(word string, documentId, position int) {
+func (ind *SiegoIndex) indexWord(word string, documentId, positionInDoc, lineNumber int) {
 	word = strings.TrimSpace(word)
 	// if len(word) < MIN_LENGTH_ELIGIBLE_WORD {
 	// 	return
 	// }
 	word = strings.ToUpper(word)
-	ind.Root.indexWord([]rune(word), documentId, position)
+	ind.Root.indexWord([]rune(word), documentId, positionInDoc, lineNumber)
 }
 
 func (ind *SiegoIndex) CountEntries() (count int) {
@@ -177,7 +207,7 @@ func (entry *IndexEntry) printEntries(indent string) {
 	}
 }
 
-func (entry *IndexEntry) indexWord(word []rune, documentId, position int) {
+func (entry *IndexEntry) indexWord(word []rune, documentId, positionInDoc, lineNumber int) {
 	if len(word) == 0 {
 		return
 	}
@@ -192,18 +222,19 @@ func (entry *IndexEntry) indexWord(word []rune, documentId, position int) {
 		}
 	}
 	if len(word) == 1 {
+		newPostion := Position{positionInDoc, lineNumber}
 		if child.Locations == nil {
 			child.Locations = make(map[int]Location)
 		}
 		loc, exists := child.Locations[documentId]
 		if !exists {
-			child.Locations[documentId] = Location{documentId, []int{position}}
+			child.Locations[documentId] = Location{documentId, []Position{newPostion}}
 		} else {
-			loc.Positions = append(loc.Positions, position)
+			loc.Positions = append(loc.Positions, newPostion)
 			child.Locations[documentId] = loc
 		}
 	} else {
-		child.indexWord(word[1:], documentId, position)
+		child.indexWord(word[1:], documentId, positionInDoc, lineNumber)
 	}
 	entry.Children[header] = child
 }
@@ -244,7 +275,6 @@ func (entry *IndexEntry) countEntries() (count int) {
 func (entry *IndexEntry) propagateParent() {
 	for key := range entry.Children {
 		child := entry.Children[key]
-		child.Fullname = entry.Fullname + string(child.Name)
 		child.Parent = entry
 		child.propagateParent()
 		entry.Children[key] = child
@@ -257,19 +287,3 @@ func (entry *IndexEntry) fullName() string {
 	}
 	return entry.Parent.fullName() + string(entry.Name)
 }
-
-// func (entry *IndexEntry) purgeFrequentEntries(totalDocNumber int, frequencyThreshold float32) (purged bool) {
-// 	frequency := float32(len(entry.Locations)) / float32(totalDocNumber)
-// 	purged = (frequency > frequencyThreshold)
-// 	for key, child := range entry.Children {
-// 		childPurged := child.purgeFrequentEntries(totalDocNumber, frequencyThreshold)
-// 		if childPurged {
-// 			delete(entry.Children, key)
-// 		}
-// 	}
-// 	purged2 := purged && (len(entry.Children) == 0)
-// 	if purged && !purged2 {
-// 		fmt.Printf("Purged word '%s' (%s) (frequency %0.0f)\n", entry.fullName(), string(entry.Name), frequency*100)
-// 	}
-// 	return purged2
-// }

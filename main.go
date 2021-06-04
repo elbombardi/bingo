@@ -108,6 +108,9 @@ func main() {
 			}
 			fmt.Printf("%v occurence(s) found in \"%s\".\n",
 				len(loc.Positions), siegoIndex.DocumentsMap[i].Name)
+			for i, pos := range loc.Positions {
+				fmt.Printf("Occurent#%d => Line #%d \n", i+1, pos.LineNumber)
+			}
 		}
 		fmt.Print("> ")
 	}
