@@ -18,7 +18,7 @@ func Normalise(str string) string {
 }
 
 func IsNotLetter(r rune) bool {
-	return !unicode.IsLetter(r)
+	return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 }
 
 // IsText reports whether a significant prefix of s looks like correct UTF-8;

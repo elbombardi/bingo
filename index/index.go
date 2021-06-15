@@ -181,11 +181,9 @@ func (ind *SiegoIndex) parseDocument(document Document, documentId int) (wordsCo
 }
 
 func (ind *SiegoIndex) indexWord(word string, documentId, positionInDoc, lineNumber int) {
-	word = strings.TrimSpace(word)
 	// if len(word) < MIN_LENGTH_ELIGIBLE_WORD {
 	// 	return
 	// }
-	word = strings.ToUpper(word)
 	ind.Root.indexWord([]rune(word), documentId, positionInDoc, lineNumber)
 }
 
