@@ -4,7 +4,7 @@ package importer
 // A document is a collection of tokens.
 type Document struct {
 	// The ID of the document.
-	DocID string `json:"doc_id"`
+	DocID int `json:"doc_id"`
 
 	// URI of the document.
 	URI string `json:"uri"`
@@ -29,7 +29,7 @@ type Import struct {
 	URI string `json:"uri"`
 
 	// The documents in the corpus.
-	Documents []Document `json:"documents"`
+	Documents []*Document `json:"documents"`
 }
 
 // Importer represents an importer.

@@ -1,11 +1,10 @@
 package importer
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,6 +31,8 @@ func (fi *FileImporter) Import(params any) (*Import, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid params")
 	}
+	log.Printf("Importing corpus from directory %v...\n", fip.Path)
+
 	corpus := &Import{}
 	corpus.Name = filepath.Base(fip.Path)
 	corpus.Description = fmt.Sprintf("Corpus imported from %s", fip.Path)
@@ -53,36 +54,17 @@ func (fi *FileImporter) Import(params any) (*Import, error) {
 		}
 		defer file.Close()
 		doc := &Document{}
-		doc.DocID, err = generateIDFromPath(path)
-		if err != nil {
-			return err
-		}
 		doc.URI, _ = strings.CutPrefix(path, fip.Path)
 		content, err := io.ReadAll(file)
 		if err != nil {
 			return err
 		}
 		doc.Content = string(content)
-		corpus.Documents = append(corpus.Documents, *doc)
+		corpus.Documents = append(corpus.Documents, doc)
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 	return corpus, nil
-}
-
-func generateIDFromPath(path string) (string, error) {
-	// Calculate SHA-256 hash of the path
-	hasher := sha256.New()
-	_, err := hasher.Write([]byte(path))
-	if err != nil {
-		return "", err
-	}
-
-	// Convert the hash to a hexadecimal string
-	hashInBytes := hasher.Sum(nil)
-	hashString := hex.EncodeToString(hashInBytes)
-
-	return hashString, nil
 }
