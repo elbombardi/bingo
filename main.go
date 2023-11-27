@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Println("Importing...")
+	// Importing
 	fi := &importer.FileImporter{}
 	fip := &importer.FileImporterParams{
 		Path:   "./datasets/shakespeares",
@@ -18,29 +18,44 @@ func main() {
 	}
 	imported, err := fi.Import(fip)
 	if err != nil {
-		panic(err)
+		log.Fatal("Import failed", err)
 	}
 
 	corpus := analyser.CorpusFromImport(imported)
+	corpus.Statistics.NumDocs = len(corpus.Documents)
 
-	log.Println("Tokenizing...")
+	// Tokenizing
 	tokenizer := analyser.NewTokenizer()
 	corpus, err = tokenizer.Analyse(corpus)
 	if err != nil {
-		panic(err)
+		log.Fatal("Tokenization failed", err)
 	}
 
-	log.Println("Lemmatizing...")
-	lemmatizer := analyser.NewLemmatizer()
-	corpus, err = lemmatizer.Analyse(corpus)
+	// Lemmatizing
+	// lemmatizer := analyser.NewLemmatizer("fr")
+	// corpus, err = lemmatizer.Analyse(corpus)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// Stemming
+	stemmer := analyser.NewStemmer("english")
+	corpus, err = stemmer.Analyse(corpus)
 	if err != nil {
-		panic(err)
+		log.Fatal("Stemming failed", err)
+	}
+
+	// TF-IDF
+	tfidf := analyser.NewTFIDF()
+	corpus, err = tfidf.Analyse(corpus)
+	if err != nil {
+		log.Fatal("TF-IDF failed", err)
 	}
 
 	log.Println("Done!")
 	json, err := json.MarshalIndent(corpus, "", "  ")
 	if err != nil {
-		panic(err)
+		log.Fatal("Marshaling failed", err)
 	}
 	fmt.Println(string(json))
 }

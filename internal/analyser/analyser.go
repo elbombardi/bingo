@@ -1,45 +1,75 @@
 package analyser
 
-import "github.com/elbombardi/bingo/internal/importer"
+import (
+	"strings"
+	"unicode"
+
+	"github.com/elbombardi/bingo/internal/importer"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
+)
+
+type TokenPosition struct {
+	Start int `json:"s"`
+	End   int `json:"e"`
+}
 
 // Token represents a word in a document.
 type Token struct {
+	// The index of the word in the document.
+	Index int `json:"i"`
+
 	// The original form of the word in the document,
 	// before any preprocessing.
 	Value string `json:"v"`
 
+	// The ID of the document that the word belongs to.
+	DocId int `json:"d"`
+
 	// The position of the word in the document.
-	Position int `json:"p"`
+	Position TokenPosition `json:"p"`
 }
 
-// Root represents a word root in a document.
+// DocTerm represents a term in a document.
 // It is the result of processing a token,
 // And it keeps track of the tokens that it is derived from.
-type Root struct {
+type DocTerm struct {
 	// The value of the root.
 	Value string `json:"v"`
 
 	// The tokens that the root is derived from.
 	Tokens []*Token `json:"ts"`
 
-	// The term frequency of the root in the document.
+	// The TF of the term (calculated by tfidf analyser)
 	TF float64 `json:"tf"`
 
-	// The document frequency of the root in the corpus.
-	DF int `json:"df"`
-
-	// The inverse document frequency of the root in the corpus.
-	IDF float64 `json:"idf"`
-
-	// The term frequency-inverse document frequency of the root in the corpus.
+	// The TFIDF of the term (calculated by tfidf analyser)
 	TFIDF float64 `json:"tfidf"`
+}
+
+type Term struct {
+	// The value of the root.
+	Value string `json:"v"`
+
+	// The tokens that the root is derived from.
+	Tokens []*Token `json:"ts"`
+
+	// The documents that the root is derived from.
+	Documents []int `json:"ds"`
+
+	// The DF of the term (calculated by tfidf analyser)
+	DF float64 `json:"df"`
+
+	// The IDF of the term (calculated by tfidf analyser)
+	IDF float64 `json:"idf"`
 }
 
 // Document represents a document in a corpus.
 // A document is a collection of tokens.
 type Document struct {
 	// The ID of the document.
-	DocID string `json:"doc_id"`
+	DocID int `json:"doc_id"`
 
 	// URI of the document.
 	URI string `json:"uri"`
@@ -51,7 +81,7 @@ type Document struct {
 	Tokens []*Token `json:"tokens"`
 
 	// The roots of the document.
-	Roots map[string]*Root `json:"roots"`
+	Terms map[string]*DocTerm `json:"terms"`
 }
 
 // CorpusStatistics represents statistics of a corpus.
@@ -61,6 +91,12 @@ type CorpusStatistics struct {
 
 	// The number of tokens in the corpus.
 	NumTokens int `json:"num_tokens"`
+
+	// The number of terms in the corpus.
+	NumDocTerms int `json:"num_doc_terms"`
+
+	// The number of unique terms in the corpus.
+	NumUniqueTerms int `json:"num_unique_terms"`
 }
 
 // Corpus represents a corpus of documents.
@@ -83,6 +119,9 @@ type Corpus struct {
 
 	// The documents in the corpus.
 	Documents []*Document `json:"documents"`
+
+	// The unique terms in the corpus.
+	Terms map[string]*Term `json:"terms"`
 }
 
 // Analyser is an interface to be implemented by analysers.
@@ -91,7 +130,7 @@ type Analyser interface {
 	Analyse(corpus *Corpus) (*Corpus, error)
 }
 
-// CorpusFromImport converts an imported corpus to a corpus.
+// CorpusFromImport converts an import to a corpus.
 func CorpusFromImport(imported *importer.Import) *Corpus {
 	c := &Corpus{}
 	c.Name = imported.Name
@@ -101,10 +140,17 @@ func CorpusFromImport(imported *importer.Import) *Corpus {
 	c.Documents = make([]*Document, len(imported.Documents))
 	for i, doc := range imported.Documents {
 		c.Documents[i] = &Document{
-			DocID:   doc.DocID,
+			DocID:   i,
 			URI:     doc.URI,
 			Content: doc.Content,
 		}
 	}
 	return c
+}
+
+func normalize(s string) string {
+	s = strings.ToLower(s)
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	s, _, _ = transform.String(t, s)
+	return s
 }
