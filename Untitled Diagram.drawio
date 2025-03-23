@@ -1,0 +1,83 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36" version="26.0.16">
+  <diagram name="Page-1" id="nm-hTvc2p2c0J_tL1eod">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="MobileApp" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="17" y="555" width="370" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Frontend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="162" y="361" width="303" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Backend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="8" y="185" width="288" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="GeoServer" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="333" y="185" width="146" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Database" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="62" y="8" width="420" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="Postgres" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="97" y="33" width="89" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="PoSTgis" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="364" y="33" width="83" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="9" value="Tegola" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="368" y="210" width="76" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="Golang Backend" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="70" y="210" width="144" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="Web Frontend" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="267" y="386" width="130" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Mobile App" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="188" y="580" width="108" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Store data" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=-0.01;" edge="1" parent="1" source="7" target="10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="14" value="Geospatial data" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.49;entryY=-0.01;" edge="1" parent="1" source="8" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="15" value="Metadata management" style="curved=1;startArrow=none;endArrow=block;exitX=0.82;exitY=0.99;entryX=0.1;entryY=0;" edge="1" parent="1" source="10" target="11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="232" y="289" />
+              <mxPoint x="232" y="361" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="16" value="Serve maps" style="curved=1;startArrow=none;endArrow=block;exitX=0.49;exitY=0.99;entryX=0.79;entryY=0;" edge="1" parent="1" source="9" target="11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="405" y="361" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="17" value="Display Realtime &amp; GIS data" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.93;entryY=0;" edge="1" parent="1" source="11" target="12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="332" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="18" value="Report incidents" style="curved=1;startArrow=none;endArrow=block;exitX=0;exitY=0.18;entryX=0.28;entryY=0.99;" edge="1" parent="1" source="12" target="10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="81" y="555" />
+              <mxPoint x="81" y="289" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
