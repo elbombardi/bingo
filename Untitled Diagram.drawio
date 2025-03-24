@@ -1,81 +1,31 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36" version="26.0.16">
   <diagram name="Page-1" id="nm-hTvc2p2c0J_tL1eod">
-    <mxGraphModel>
+    <mxGraphModel dx="1306" dy="825" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="2" value="MobileApp" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="17" y="555" width="370" height="104" as="geometry" />
+        <mxCell id="3BfXg-flvbQQuItae440-27" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="130" width="160" height="530" as="geometry" />
         </mxCell>
-        <mxCell id="3" value="Frontend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="162" y="361" width="303" height="104" as="geometry" />
+        <mxCell id="3BfXg-flvbQQuItae440-28" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="334" y="120" width="160" height="240" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="Backend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="8" y="185" width="288" height="104" as="geometry" />
+        <UserObject label="" link="&lt;meta charset=&quot;utf-8&quot;&gt;&lt;a style=&quot;box-sizing: border-box; color: rgba(0, 0, 0, 0.9); text-decoration: none; background-color: transparent; touch-action: manipulation; display: inline-block; padding-top: 0.3125rem; padding-bottom: 0.3125rem; margin-right: 1rem; font-size: 1.25rem; line-height: inherit; white-space: nowrap; font-family: -apple-system, &amp;quot;system-ui&amp;quot;, &amp;quot;Segoe UI&amp;quot;, Roboto, &amp;quot;Helvetica Neue&amp;quot;, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;, &amp;quot;Segoe UI Symbol&amp;quot;; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;&quot; href=&quot;https://tegola.io/&quot; class=&quot;navbar-brand&quot;&gt;TEGOLA&lt;/a&gt;" id="3BfXg-flvbQQuItae440-29">
+          <mxCell style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+            <mxGeometry x="334" y="370" width="160" height="290" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="3BfXg-flvbQQuItae440-30" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;ORSEC : POC (proof of concept)&amp;nbsp;&lt;/h1&gt;&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="690" width="570" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="5" value="GeoServer" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="333" y="185" width="146" height="104" as="geometry" />
+        <mxCell id="3BfXg-flvbQQuItae440-31" value="Postgresql&amp;nbsp;&lt;br&gt;+&amp;nbsp;&lt;br&gt;PostGIS extension" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;" vertex="1" parent="1">
+          <mxGeometry x="106" y="306" width="48" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="6" value="Database" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="62" y="8" width="420" height="104" as="geometry" />
+        <mxCell id="3BfXg-flvbQQuItae440-32" value="Management API&lt;br&gt;(Golang)" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#2875E2;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="1">
+          <mxGeometry x="390" y="216" width="50" height="48" as="geometry" />
         </mxCell>
-        <mxCell id="7" value="Postgres" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="97" y="33" width="89" height="54" as="geometry" />
-        </mxCell>
-        <mxCell id="8" value="PoSTgis" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="364" y="33" width="83" height="54" as="geometry" />
-        </mxCell>
-        <mxCell id="9" value="Tegola" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="368" y="210" width="76" height="54" as="geometry" />
-        </mxCell>
-        <mxCell id="10" value="Golang Backend" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="70" y="210" width="144" height="54" as="geometry" />
-        </mxCell>
-        <mxCell id="11" value="Web Frontend" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="267" y="386" width="130" height="54" as="geometry" />
-        </mxCell>
-        <mxCell id="12" value="Mobile App" style="rounded=1;arcSize=20;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="188" y="580" width="108" height="54" as="geometry" />
-        </mxCell>
-        <mxCell id="13" value="Store data" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=-0.01;" edge="1" parent="1" source="7" target="10">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="14" value="Geospatial data" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.49;entryY=-0.01;" edge="1" parent="1" source="8" target="9">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="15" value="Metadata management" style="curved=1;startArrow=none;endArrow=block;exitX=0.82;exitY=0.99;entryX=0.1;entryY=0;" edge="1" parent="1" source="10" target="11">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="232" y="289" />
-              <mxPoint x="232" y="361" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="16" value="Serve maps" style="curved=1;startArrow=none;endArrow=block;exitX=0.49;exitY=0.99;entryX=0.79;entryY=0;" edge="1" parent="1" source="9" target="11">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="405" y="361" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="17" value="Display Realtime &amp; GIS data" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.93;entryY=0;" edge="1" parent="1" source="11" target="12">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="332" y="555" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="18" value="Report incidents" style="curved=1;startArrow=none;endArrow=block;exitX=0;exitY=0.18;entryX=0.28;entryY=0.99;" edge="1" parent="1" source="12" target="10">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="81" y="555" />
-              <mxPoint x="81" y="289" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="3BfXg-flvbQQuItae440-33" value="Geo API&amp;nbsp;&lt;br&gt;(Tegola)" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#2875E2;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="1">
+          <mxGeometry x="389" y="460" width="50" height="48" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
